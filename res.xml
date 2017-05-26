@@ -6,4 +6,7 @@
   <gresource prefix="/home/dexter/projects/vala/four">
     <file compressed="true" preprocess="xml-stripblanks">config.ui</file>
   </gresource>
+  <gresource prefix="/home/dexter/projects/vala/four">
+    <file compressed="true" preprocess="xml-stripblanks">dns.ui</file>
+  </gresource>
 </gresources>
