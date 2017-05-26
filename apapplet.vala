@@ -80,6 +80,11 @@
      }
 
      public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap) {
+        this.name = "ap_applet";
+        this.set_margin_bottom(3);
+        this.set_margin_top(2);
+        this.set_margin_left(1);
+        this.set_margin_right(1);
         this.device = _device;
         this.access_point = _ap;
         this.mac = _ap.bssid;

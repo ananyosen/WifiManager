@@ -25,7 +25,7 @@ class DnsUi : Box {
         this.button_remove_this.clicked.connect(() => {
             removeClicked();
         });
-        this.button_remove_this.name = "remove";
+        this.button_remove_this.name = "remove_dns";
     }
 
 

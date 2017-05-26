@@ -59,13 +59,13 @@ class ConfigIP : Box {
         Gtk.Entry entry = (Gtk.Entry) _editable;
         string text = entry.get_text();
         bool valid = validateIP(text);
-        entry.name = (valid)?"good":"bad";
+        entry.name = (valid)?"good_ip":"bad_ip";
     }
 
     private void extraDnsChangedCB(DnsUi ui) {
         string text = ui.get_text();
         bool valid = validateIP(text);
-        ui.name = (valid)?"good":"bad";
+        ui.name = (valid)?"good_ip":"bad_ip";
     }
 
     private void extraDnsRemovedCB(DnsUi ui) {
@@ -101,20 +101,7 @@ class ConfigIP : Box {
         this.entry_dns1.changed.connect(ipChangedCB);
         this.entry_dns2.changed.connect(ipChangedCB);
         //  this.button_cancel.name = "button1";
-        Gtk.CssProvider css_provider = new Gtk.CssProvider();
-        string css = "#bad{background-color: #e79e9e;} #good{background-color:#8ff291;}
-         #remove{color: #ff3333;}";
-        try {
-            css_provider.load_from_data(css);
-        }
-        catch(GLib.Error err) {
-            stdout.printf("\n ERROR LOADING CSS AT config.vala \n\n");
-        }
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), 
-            css_provider,     
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
+        
 
     }
 }
