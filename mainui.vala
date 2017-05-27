@@ -26,6 +26,8 @@ class MainUi : Gtk.Box {
     private GenericArray<Gtk.Viewport> vp_aps = null;
     private GenericArray<Gtk.Box> box_aps = null;
     private GenericArray<DeviceUi> device_uis = null;
+
+    private GenericArray<NM.RemoteConnection> remote_connections = null;
     
 
     public bool wifi_on {
@@ -52,6 +54,8 @@ class MainUi : Gtk.Box {
         box_all.name = "ap_list";        
         vp_all.add(box_all);
         scroll_all.add(vp_all);
+        scroll_all.set_min_content_width(350);
+        scroll_all.set_min_content_height(250);
         this.scroll_aps.add(scroll_all);
         this.vp_aps.add(vp_all);
         this.box_aps.add(box_all);
@@ -122,39 +126,53 @@ class MainUi : Gtk.Box {
         box_ap_.vexpand = true;
         box_ap_.name = "ap_list";
         Viewport vp_dev = new Viewport(null, null);
-        ScrolledWindow scroll_dev = new ScrolledWindow(null, null);
+        ScrolledWindow _scroll_dev = new ScrolledWindow(null, null);
+        _scroll_dev.set_min_content_width(350);
+        _scroll_dev.set_min_content_height(250);
         vp_dev.add(box_ap_);
-        scroll_dev.add(vp_dev);
-        this.scroll_aps.add(scroll_dev);
+        _scroll_dev.add(vp_dev);
+        this.scroll_aps.add(_scroll_dev);
         this.vp_aps.add(vp_dev);
         this.box_aps.add(box_ap_);
-        this.stack_ap.add(scroll_dev);
+        this.stack_ap.add(_scroll_dev);
         DeviceUi dev_ui = new DeviceUi(_dev);
         dev_ui.index = this.scroll_aps.length - 1;
         this.device_uis.add(dev_ui);
         this.box_dev.add(dev_ui);
         _dev.added = true;
-        //  this.dev_children = this.box_dev.get_children();
-        //  dev_ui.clickedOnDevice.connect((_src) => {
-        //      foreach(Widget _w in this.dev_children) {
-        //          _w.name = "dev_applet";
-        //      }
-        //      _src.name = "dev_applet_selected";
-        //  });
     }
 
-    public void addAccessPoints(GenericArray<NM.AccessPoint> aps, WifiUtility.WifiDevice _device) {
+    public void addAccessPoints(GenericArray<NM.AccessPoint> _aps, WifiUtility.WifiDevice _device) {
         if(_device.added && _device.index < scroll_aps.length - 1) {
-            Box box_ap = box_aps[_device.index + 1];
-            List<Widget> _ws = box_ap.get_children();
-            foreach(Widget _w in _ws) {
-                box_ap.remove(_w);
+            Box _box_ap = box_aps[_device.index + 1];
+            if(_box_ap != null) {
+                List<Widget> _ws = _box_ap.get_children();
+                foreach(Widget _w in _ws) {
+                        _box_ap.remove(_w);
+                }
             }
-            for(int iii = 0; iii < aps.length; iii++) {
-                ApApplet applet = new ApApplet(_device, aps[iii]);
-                box_ap.add(applet);
-                stdout.printf("\n ap added index: %d\n", iii);
+            Box _box_all = this.box_aps[0];
+            if(_box_all != null ) {
+                List<Widget> _wss = _box_all.get_children();
+                foreach(Widget _w in _wss) {
+                    ApApplet _ap = (ApApplet) _w;
+                    if(_ap.getDevice().index == _device.index) {
+                        _box_all.remove(_w);
+
+                    }
+                }
+            }
+            for(int iii = 0; iii < _aps.length; iii++) {
+                ApApplet _applet = new ApApplet(_device, _aps[iii]);
+                ApApplet applet_all = new ApApplet(_device, _aps[iii]);
+                _box_ap.add(_applet);
+                _box_all.add(applet_all);
+                //  stdout.printf("\n ap added index: %d\n", iii);
             }
         }
+    }
+
+    public void updateSavedSettings(GenericArray<NM.RemoteConnection> _connections) {
+        this.remote_connections = _connections;
     }
 }

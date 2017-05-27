@@ -41,7 +41,7 @@ class ConfigIP : Box {
         this.box_dns.set_sensitive(_enabled);
     }
 
-    private bool validateIP(string text) {
+    private bool validateIP4(string text) {
         string[] parts = text.split(".");
         if(parts.length != 4) {
             return false;
@@ -58,13 +58,13 @@ class ConfigIP : Box {
     private void ipChangedCB(Gtk.Editable _editable) {
         Gtk.Entry entry = (Gtk.Entry) _editable;
         string text = entry.get_text();
-        bool valid = validateIP(text);
+        bool valid = validateIP4(text);
         entry.name = (valid)?"good_ip":"bad_ip";
     }
 
     private void extraDnsChangedCB(DnsUi ui) {
         string text = ui.get_text();
-        bool valid = validateIP(text);
+        bool valid = validateIP4(text);
         ui.name = (valid)?"good_ip":"bad_ip";
     }
 
@@ -101,7 +101,5 @@ class ConfigIP : Box {
         this.entry_dns1.changed.connect(ipChangedCB);
         this.entry_dns2.changed.connect(ipChangedCB);
         //  this.button_cancel.name = "button1";
-        
-
     }
 }

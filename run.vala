@@ -52,25 +52,25 @@ int main(string[] args) {
     });
 
 
-        Gtk.CssProvider css_provider = new Gtk.CssProvider();
-        string css = "#bad_ip{background-color: #e79e9e;}
-         #good_ip{background-color:#8ff291;}
-         #remove_dns{color: #ff3333;}
-         #ap_list{background-color: #ffffff; border: 1px solid #ccc; border-radius: 3px;}
-         #ap_applet{border-bottom: 1px solid #ccc;}
-         #dev_list{border-radius: 3px;}
-         #main_window{}";
-        try {
-            css_provider.load_from_data(css);
-        }
-        catch(GLib.Error err) {
-            Helper.log("ERROR LOADING CSS AT config.vala");
-        }
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), 
-            css_provider,     
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
+    Gtk.CssProvider css_provider = new Gtk.CssProvider();
+    string css = "#bad_ip{background-color: #e79e9e;}
+        #good_ip{background-color:#8ff291;}
+        #remove_dns{color: #ff3333;}
+        #ap_list{background-color: #ffffff; border: 1px solid #ccc; border-radius: 3px;}
+        #ap_applet{border-bottom: 1px solid #ccc;}
+        #dev_list{border-radius: 3px;}
+        #main_window{}";
+    try {
+        css_provider.load_from_data(css);
+    }
+    catch(GLib.Error err) {
+        Helper.log("ERROR LOADING CSS AT config.vala");
+    }
+    Gtk.StyleContext.add_provider_for_screen(
+        Gdk.Screen.get_default(), 
+        css_provider,     
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
     //  if(manager.num_of_devices > 0) {
     //      stdout.printf("product:  %s\n\n", manager.getDevices()[0].getProduct());
     //  }
