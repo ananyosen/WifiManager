@@ -20,6 +20,7 @@ namespace WifiUtility {
         private bool scanning = false;
         private GenericArray<NM.AccessPoint> access_points = null;
         public int index = -1;
+        public bool added = false;
         public WifiDevice(NM.DeviceWifi _device) {
             this.device = _device;
             this.product = this.device.get_product();

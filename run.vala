@@ -30,31 +30,16 @@ int main(string[] args) {
         //do something and return
     }
     for(int iii = 0; iii < devices.length; iii++) {
-        WifiDevice _dev = devices[iii];
-        main_ui.addDeviceUi(_dev);
+        devices[iii].index = iii;
+        WifiDevice dev = devices[iii];
+        main_ui.addDeviceUi(dev);
+        dev.scan();
+        dev.scanDone.connect((_dev)=> {
+            GenericArray<NM.AccessPoint> aps = new GenericArray<NM.AccessPoint>();
+            _dev.getScannedAPs(ref aps);
+            main_ui.addAccessPoints(aps, _dev);
+        });
     }
-    //  for(int iii = 0; iii < devices.length; iii++) {
-    //      box_dev.add(new Label(devices[iii].getProduct()));
-    //      devices[iii].scan();
-    //      devices[iii].scanDone.connect((_dev) => {
-    //          int index = _dev.index;
-    //          if(box_ap != null) {
-    //              List<Widget> children = box_ap.get_children();
-    //              foreach(Widget _ap in children) {
-    //                  box_ap.remove(_ap);
-    //              }
-    //          }
-    //          GenericArray<NM.AccessPoint> aps = new GenericArray<NM.AccessPoint>();
-    //          _dev.getScannedAPs(ref aps);
-    //          stdout.printf("\n length %d\n", aps.length);
-    //          for(int jjj = 0; jjj < aps.length; jjj++) {
-    //              NM.AccessPoint ap = aps[jjj];
-    //              ApApplet applet = new ApApplet(_dev, ap);
-    //              box_ap.add(applet);
-    //          }
-    //      });
-        
-    //  }
     main_ui.wifi_on = manager.wifiEnabled;
     main_ui.wifiSwitchToggled.connect(() => {
         manager.wifiEnabled = main_ui.wifi_on;
@@ -71,7 +56,9 @@ int main(string[] args) {
         string css = "#bad_ip{background-color: #e79e9e;}
          #good_ip{background-color:#8ff291;}
          #remove_dns{color: #ff3333;}
-         #ap_applet{background-color: #efefef; box-shadow: 3px 0 3px 3px #cccccc;}
+         #ap_list{background-color: #ffffff; border: 1px solid #ccc; border-radius: 3px;}
+         #ap_applet{border-bottom: 1px solid #ccc;}
+         #dev_list{border-radius: 3px;}
          #main_window{}";
         try {
             css_provider.load_from_data(css);
