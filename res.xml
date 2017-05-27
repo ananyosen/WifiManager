@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/home/dexter/projects/vala/four">
+    <file compressed="true" preprocess="xml-stripblanks">main.ui</file>
+  </gresource>
+  <gresource prefix="/home/dexter/projects/vala/four">
     <file compressed="true" preprocess="xml-stripblanks">apapplet.ui</file>
   </gresource>
   <gresource prefix="/home/dexter/projects/vala/four">
