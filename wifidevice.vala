@@ -15,6 +15,7 @@ namespace WifiUtility {
     public class WifiDevice : GLib.Object { 
         private NM.DeviceWifi device = null;
         private string product;
+        private string vendor;
         private string MAC;
         private bool scanning = false;
         private GenericArray<NM.AccessPoint> access_points = null;
@@ -23,6 +24,7 @@ namespace WifiUtility {
             this.device = _device;
             this.product = this.device.get_product();
             this.MAC = this.device.get_hw_address();
+            this.vendor = this.device.get_vendor();
         }
 
         public signal void scanDone();
@@ -81,6 +83,10 @@ namespace WifiUtility {
 
         public NM.DeviceWifi getRawDevice() {
             return this.device;
+        }
+
+        public string getVendor() {
+            return this.vendor;
         }
 
         public void getScannedAPs(ref GenericArray<AccessPoint> _access_points) {

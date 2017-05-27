@@ -24,7 +24,7 @@ class Helper : GLib.Object {
             return data;
         }
         else {
-            return data.substring(0, len) + "…";
+            return (data.substring(0, len)).strip() + "…";
         }
     }
 }

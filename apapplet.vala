@@ -122,7 +122,7 @@
                     //do something
                     this.config_window = null;
                 }
-                return true;
+                return false;
             });
             this.config_window.show_all();
              modConnectClicked();
