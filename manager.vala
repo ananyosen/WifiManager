@@ -46,21 +46,29 @@ namespace WifiUtility {
             return _foundWifi;
         }
 
-        private void readSavedNetworksCB(NM.RemoteSettings _remote_settings) {
-            SList<RemoteConnection> _remote_connections = _remote_settings.list_connections();
+        public void readSavedNetworksCB(NM.RemoteSettings _remote_settings) {
+            SList<weak NM.RemoteConnection> _remote_connections = _remote_settings.list_connections();
             for(int iii = 0; iii < _remote_connections.length(); iii++) {
                 RemoteConnection _remote_connection = _remote_connections.nth_data(iii);
                 if(_remote_connection.is_type("802-11-wireless")) {
                     this.remote_connections.add(_remote_connection);
                 }
             }
+            _remote_connections = null;
+            networksRead();
         }
 
-        public void readSavedNetworks(ref NM.RemoteSettings _remote_settings) {
-            if(_remote_settings == null) {
-                _remote_settings = new NM.RemoteSettings(null);
-            }
-            _remote_settings.connections_read.connect(this.readSavedNetworksCB);
+        //  public void readSavedNetworks(NM.RemoteSettings _remote_settings) {
+
+        //      NM.RemoteSettings __remote_settings = _remote_settings;
+        //      if(__remote_settings == null) {
+        //          __remote_settings = new NM.RemoteSettings(null);
+        //      }
+        //      __remote_settings.connections_read.connect(this.readSavedNetworksCB);
+        //  }
+
+        public GenericArray<RemoteConnection> getRemoteConnections() {
+            return this.remote_connections;
         }
 
         public GenericArray<WifiDevice> getDevices() {

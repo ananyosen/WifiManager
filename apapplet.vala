@@ -33,6 +33,7 @@
     private Gtk.Window config_window = null;
     private ConfigIP config_ip = null;
     private NM.Connection remote_connection = null;
+    private bool matched;
      public string ssid {
          set {ap_name.label = value;}
         //   get {return this.ssid;}
@@ -80,7 +81,7 @@
          set {text_channel.label ="CH: " + value;}         
      }
 
-     public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, NM.Connection _connection = new NM.Connection()) {
+     public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, bool _matched, NM.Connection _connection = new NM.Connection()) {
         this.name = "ap_applet";
         this.set_margin_bottom(3);
         this.set_margin_top(2);
@@ -89,6 +90,7 @@
         this.device = _device;
         this.access_point = _ap;
         this.remote_connection = _connection;
+        this.matched = _matched;
         this.mac = _ap.bssid;
         this.ssid = NM.Utils.ssid_to_utf8(_ap.get_ssid());
         this.freq = _ap.frequency.to_string();
