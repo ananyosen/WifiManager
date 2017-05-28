@@ -54,7 +54,7 @@ class MainUi : Gtk.Box {
         box_all.name = "ap_list";        
         vp_all.add(box_all);
         scroll_all.add(vp_all);
-        scroll_all.set_min_content_width(350);
+        scroll_all.set_min_content_width(400);
         scroll_all.set_min_content_height(250);
         this.scroll_aps.add(scroll_all);
         this.vp_aps.add(vp_all);
@@ -133,7 +133,7 @@ class MainUi : Gtk.Box {
         box_ap_.name = "ap_list";
         Viewport vp_dev = new Viewport(null, null);
         ScrolledWindow _scroll_dev = new ScrolledWindow(null, null);
-        _scroll_dev.set_min_content_width(350);
+        _scroll_dev.set_min_content_width(400);
         _scroll_dev.set_min_content_height(250);
         vp_dev.add(box_ap_);
         _scroll_dev.add(vp_dev);
@@ -149,6 +149,7 @@ class MainUi : Gtk.Box {
     }
 
     public void addAccessPoints(GenericArray<NM.AccessPoint> _aps, WifiUtility.WifiDevice _device) {
+        GenericArray<NM.AccessPoint> _own_aps = _aps;
         if(_device.added && _device.index < scroll_aps.length - 1) {
             Box _box_ap = box_aps[_device.index + 1];
             if(_box_ap != null) {
@@ -168,45 +169,92 @@ class MainUi : Gtk.Box {
                     }
                 }
             }
-            for(int iii = 0; iii < _aps.length; iii++) {
-                if(this.remote_connections == null) {
-                    Helper.w("[mainui.vala] Object (remote_connections == null) true, proper init required");
-                    return;
-                }
-                NM.AccessPoint _ap = _aps[iii];
-                NM.Connection _ap_connection = null;
-                bool _matched = false;
-                for(int jjj = 0; jjj < this.remote_connections.length; jjj++) {
-                    NM.Connection _connection = (NM.Connection)this.remote_connections[jjj];
-                    if(_ap.connection_valid(_connection)) {
-                        _matched = true;
-                        _ap_connection = _connection;
-                        Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _connection.get_path());
-                        break;
-                    }
-                    //DO NOT DELETE
 
-                    //  NM.SettingWireless _setting = this.remote_connections[jjj].get_setting_wireless();
-                    //  string _s1 = NM.Utils.ssid_to_utf8(_setting.get_ssid());
-                    //  string _s2 = NM.Utils.ssid_to_utf8(_ap.get_ssid());
-                    //  bool a = (_s1 == _s2);
-                    //  NM.SettingWirelessSecurity _setting_security = this.remote_connections[jjj].get_setting_wireless_security();
-                    //  bool _connection_is_wpa = (_setting_security.key_mgmt == "wpa-psk");
-                    //  bool _connection_is_wep = (_setting_security.key_mgmt == "open" || _setting_security.key_mgmt == "ieee8021x");
-                    //  bool _ap_is_wpa1 = (_ap.wpa_flags != 0);
-                    //  bool _ap_is_wpa2 = (_ap.rsn_flags != 0);
+            //NEW METHOD: MATCH NM.AccessPoint TO NM.Connection
 
-                    //DO NOT DELETE
-                }
-                if(_ap_connection == null) {
-                    _ap_connection = new NM.Connection();
-                    Helper.i("[mainui.vala] unmatched ap: " + _ap.get_path());
-                }
-                ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection);
-                ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection);
-                _box_ap.add(_applet);
-                _box_all.add(applet_all);
+            if(this.remote_connections == null) {
+                Helper.w("[mainui.vala] Object (remote_connections == null) true, proper init required");
+                return;
             }
+            //fast match and removal
+            GenericArray<int> _matched_indexs = new GenericArray<int>();
+
+            for(int iii = 0; iii < this.remote_connections.length; iii++) {
+                NM.Connection _ap_connection = (NM.Connection) this.remote_connections[iii];
+                for(int jjj = 0; jjj < _aps.length; jjj++) {
+                    NM.AccessPoint _ap = _aps[jjj];
+                    bool _matched = _ap.connection_valid(_ap_connection);
+                    if(_matched) {
+                        _matched_indexs.remove_fast(jjj);
+                        _matched_indexs.add(jjj);
+                        Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _ap_connection.get_path());                        
+                        ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection);
+                        ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection);
+                        _box_ap.add(_applet);
+                        _box_all.add(applet_all);
+                    }
+                }
+            }
+
+            for(int iii = 0; iii < _aps.length; iii++) {
+                if(!_matched_indexs.remove_fast(iii)) {
+                    NM.AccessPoint _ap = _aps[iii];
+                    Helper.i("[mainui.vala] unmatched ap: " + _ap.get_path());                        
+                    ApApplet _applet = new ApApplet(_device, _ap, false, new NM.Connection());
+                    ApApplet applet_all = new ApApplet(_device, _ap, false, new NM.Connection());
+                    _box_ap.add(_applet);
+                    _box_all.add(applet_all);
+                }
+            }
+
+
+            //END NEW METHOD
+
+
+            //OLD METHOD: MATCH NM.Connection TO NM.AccessPoint
+
+            //  for(int iii = 0; iii < _aps.length; iii++) {
+            //      if(this.remote_connections == null) {
+            //          Helper.w("[mainui.vala] Object (remote_connections == null) true, proper init required");
+            //          return;
+            //      }
+            //      NM.AccessPoint _ap = _aps[iii];
+            //      NM.Connection _ap_connection = null;
+            //      bool _matched = false;
+            //      for(int jjj = 0; jjj < this.remote_connections.length; jjj++) {
+            //          NM.Connection _connection = (NM.Connection)this.remote_connections[jjj];
+            //          if(_ap.connection_valid(_connection)) {
+            //              _matched = true;
+            //              _ap_connection = _connection;
+            //              Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _connection.get_path());
+            //              break;
+            //          }
+            //          //DO NOT DELETE
+
+            //          //  NM.SettingWireless _setting = this.remote_connections[jjj].get_setting_wireless();
+            //          //  string _s1 = NM.Utils.ssid_to_utf8(_setting.get_ssid());
+            //          //  string _s2 = NM.Utils.ssid_to_utf8(_ap.get_ssid());
+            //          //  bool a = (_s1 == _s2);
+            //          //  NM.SettingWirelessSecurity _setting_security = this.remote_connections[jjj].get_setting_wireless_security();
+            //          //  bool _connection_is_wpa = (_setting_security.key_mgmt == "wpa-psk");
+            //          //  bool _connection_is_wep = (_setting_security.key_mgmt == "open" || _setting_security.key_mgmt == "ieee8021x");
+            //          //  bool _ap_is_wpa1 = (_ap.wpa_flags != 0);
+            //          //  bool _ap_is_wpa2 = (_ap.rsn_flags != 0);
+
+            //          //DO NOT DELETE
+            //      }
+            //      if(_ap_connection == null) {
+            //          _ap_connection = new NM.Connection();
+            //          Helper.i("[mainui.vala] unmatched ap: " + _ap.get_path());
+            //      }
+            //      ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection);
+            //      ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection);
+            //      _box_ap.add(_applet);
+            //      _box_all.add(applet_all);
+            //  }
+
+            //END OLD METHOD
+
         }
     }
 

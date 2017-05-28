@@ -66,6 +66,14 @@ void initializeDevices() {
     }
 }
 
+void somethingChanged() {
+    manager.readSavedNetworksCB(remote_settings);
+    main_ui.updateSavedSettings(manager.getRemoteConnections());
+    for(int iii = 0; iii < devices.length; iii++) {
+        devices[iii].scan();
+    }
+}
+
 int main(string[] args) {
     Gtk.init(ref args);
     main_window = new Window();
@@ -86,12 +94,19 @@ int main(string[] args) {
     initializeWireless();
 
     remote_settings = new NM.RemoteSettings(null);
+    remote_settings.new_connection.connect(()=>{
+        somethingChanged();
+    });
     connections_read_handler = remote_settings.connections_read.connect((_src)=>{
         //  stdout.printf("here");
        manager.readSavedNetworksCB(_src);
        main_ui.updateSavedSettings(manager.getRemoteConnections());
        initializeDevices();
        
+    });
+    manager.connectionsChanged.connect(()=>{
+        //  stdout.printf("\n\nrun: connections removed\n\n");
+        somethingChanged();
     });
     //  manager = new Manager();
     //  manager.initDevices();

@@ -25,6 +25,8 @@
      private Button button_mod_connect;
      [GtkChild]
      private Label text_channel;
+     [GtkChild]
+     private Button button_delete;
 
     //   private int deviceID = -1;
     //   private int apID = -1; 
@@ -82,6 +84,10 @@
          set {text_channel.label ="CH: " + value;}         
      }
 
+     public void remoteCOnnectionRemovedCB(NM.RemoteConnection _connection, GLib.Error err) {
+
+     }
+
      public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, bool _matched, NM.Connection _connection = new NM.Connection()) {
         this.name = "ap_applet";
         this.set_margin_bottom(3);
@@ -97,6 +103,7 @@
             string _ip4_method = (this.remote_connection.get_setting_ip4_config()).method;
             this.is_dhcp4 = (_ip4_method == "auto");
         }
+        this.button_delete.set_sensitive(this.matched);
         this.mac = _ap.bssid;
         this.ssid = NM.Utils.ssid_to_utf8(_ap.get_ssid());
         this.freq = _ap.frequency.to_string();
@@ -106,6 +113,10 @@
         button_connect.clicked.connect(() => {
              connectClicked();
          });
+        button_delete.clicked.connect(()=>{
+            NM.RemoteConnection _remote = (NM.RemoteConnection) this.remote_connection;
+            _remote.@delete(this.remoteCOnnectionRemovedCB);
+        });
         button_mod_connect.clicked.connect(() => {
             if(this.config_window != null) {
                 this.config_window.present();

@@ -31,6 +31,7 @@ namespace WifiUtility {
         }
 
         public signal void networksRead();
+        public signal void connectionsChanged();
 
         public bool initDevices() {
             bool _foundWifi = false;
@@ -47,10 +48,16 @@ namespace WifiUtility {
         }
 
         public void readSavedNetworksCB(NM.RemoteSettings _remote_settings) {
+            this.remote_connections = new GenericArray<NM.RemoteConnection>();
             SList<weak NM.RemoteConnection> _remote_connections = _remote_settings.list_connections();
             for(int iii = 0; iii < _remote_connections.length(); iii++) {
                 RemoteConnection _remote_connection = _remote_connections.nth_data(iii);
                 if(_remote_connection.is_type("802-11-wireless")) {
+                    _remote_connection.removed.connect((_src) => {
+                        stdout.printf("\n\nmanager: connections removed\n\n");
+                        this.remote_connections.remove_fast(_src);
+                        this.connectionsChanged();
+                    });
                     this.remote_connections.add(_remote_connection);
                 }
             }
