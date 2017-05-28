@@ -34,6 +34,7 @@ class ConfigIP : Box {
     private NM.AccessPoint access_point = null;
     private NM.Connection nm_connection = null;
     private GenericArray<DnsUi> dns_list = null;
+    private bool is_dhcp4;
     
     private void handle_toggle() {
         bool _enabled = this.radio_static.get_active();
@@ -75,15 +76,17 @@ class ConfigIP : Box {
         this.box_dns.remove(ui);
     }
 
-    public ConfigIP(NM.AccessPoint _ap, NM.Connection _connection) {
+    public ConfigIP(NM.AccessPoint _ap, NM.Connection _connection, bool _is_dhcp4) {
 
         this.access_point = _ap;
         this.nm_connection = _connection;
         this.radio_static.join_group(radio_dhcp);
         this.radio_dhcp.toggled.connect(handle_toggle);
         this.radio_static.toggled.connect(handle_toggle);
-        this.box_ip.set_sensitive(false); //fix TODO
-        this.box_dns.set_sensitive(false); //fix TODO
+        this.is_dhcp4 = _is_dhcp4;
+        this.radio_dhcp.active = this.is_dhcp4;
+        this.box_ip.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
+        this.box_dns.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
         this.dns_list = new GenericArray<DnsUi>();
         this.button_cancel.clicked.connect(() => {
             closeUnsaved();

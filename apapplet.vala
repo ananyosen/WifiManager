@@ -34,6 +34,7 @@
     private ConfigIP config_ip = null;
     private NM.Connection remote_connection = null;
     private bool matched;
+    private bool is_dhcp4 = true;
      public string ssid {
          set {ap_name.label = value;}
         //   get {return this.ssid;}
@@ -91,6 +92,11 @@
         this.access_point = _ap;
         this.remote_connection = _connection;
         this.matched = _matched;
+        this.text_saved.label = (this.matched)?"saved":"not saved";
+        if(this.matched) {
+            string _ip4_method = (this.remote_connection.get_setting_ip4_config()).method;
+            this.is_dhcp4 = (_ip4_method == "auto");
+        }
         this.mac = _ap.bssid;
         this.ssid = NM.Utils.ssid_to_utf8(_ap.get_ssid());
         this.freq = _ap.frequency.to_string();
@@ -106,7 +112,7 @@
                 return;
             }
             this.config_window = new Gtk.Window();
-            this.config_ip = new ConfigIP(this.access_point, this.remote_connection);
+            this.config_ip = new ConfigIP(this.access_point, this.remote_connection, this.is_dhcp4);
             this.config_window.set_resizable(false);
             Label window_title = new Gtk.Label("Config: " + NM.Utils.ssid_to_utf8(this.access_point.get_ssid()));
             window_title.set_margin_top(5);
