@@ -14,6 +14,10 @@ class DnsUi : Box {
         get {return this.entry_dns.name;}
         set {this.entry_dns.name = value;}
     }
+    public string text {
+        get {return this.entry_dns.get_text();}
+        set {this.entry_dns.set_text(value);}
+    }
     public signal void uiChanged();
     public signal void removeClicked();
     
@@ -26,10 +30,5 @@ class DnsUi : Box {
             removeClicked();
         });
         this.button_remove_this.name = "remove_dns";
-    }
-
-
-    public string get_text() {
-        return this.entry_dns.get_text();
     }
 }

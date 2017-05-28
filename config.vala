@@ -34,6 +34,8 @@ class ConfigIP : Box {
     private NM.AccessPoint access_point = null;
     private NM.Connection nm_connection = null;
     private GenericArray<DnsUi> dns_list = null;
+    private NM.SettingIP4Config setting_ip4_config= null;
+    private NM.IP4Address default_ip4 = null;
     private bool is_dhcp4;
     
     private void handle_toggle() {
@@ -64,7 +66,7 @@ class ConfigIP : Box {
     }
 
     private void extraDnsChangedCB(DnsUi ui) {
-        string text = ui.get_text();
+        string text = ui.text;
         bool valid = validateIP4(text);
         ui.name = (valid)?"good_ip":"bad_ip";
     }
@@ -87,6 +89,34 @@ class ConfigIP : Box {
         this.radio_dhcp.active = this.is_dhcp4;
         this.box_ip.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
         this.box_dns.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
+        if(!this.is_dhcp4) {
+            this.setting_ip4_config = this.nm_connection.get_setting_ip4_config();
+            if(this.setting_ip4_config.get_num_addresses() > 0) {
+                this.default_ip4 = this.setting_ip4_config.get_address(0); //TODO : think about alternate addresses
+                uint32 _ip4 = this.default_ip4.get_address();
+                uint32 _gateway = this.default_ip4.get_gateway();
+                uint32 _netmask_prefix = this.default_ip4.get_prefix();
+                uint32 _netmask = NM.Utils.ip4_prefix_to_netmask(_netmask_prefix);
+                this.entry_ip.text = Helper.networkIntToIp4Dotted(_ip4);
+                this.entry_gateway.text = Helper.networkIntToIp4Dotted(_gateway);
+                this.entry_subnet.text = Helper.networkIntToIp4Dotted(_netmask);
+            }
+            uint _num_dns = this.setting_ip4_config.get_num_dns();
+            if(_num_dns > 0) {
+                this.entry_dns1.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(0));
+                if(_num_dns > 1) {
+                    this.entry_dns1.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(1));
+                }
+                for(int kkk = 2; kkk < _num_dns; kkk++) {
+                    DnsUi dns_ui = new DnsUi(dns_list.length);
+                    dns_ui.handler_change = dns_ui.uiChanged.connect(extraDnsChangedCB);
+                    dns_ui.handler_remove = dns_ui.removeClicked.connect(extraDnsRemovedCB);
+                    dns_ui.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(kkk));
+                    this.dns_list.add(dns_ui);
+                    this.box_dns.add(dns_ui);
+                }
+            }
+        }
         this.dns_list = new GenericArray<DnsUi>();
         this.button_cancel.clicked.connect(() => {
             closeUnsaved();
