@@ -75,7 +75,8 @@ class MainUi : Gtk.Box {
         this.stack_ap.name = "ap_list";
         this.stack_ap.set_border_width(1);
         this.stack_ap.set_margin_left(10);
-        this.stack_ap.set_margin_right(10);        
+        this.stack_ap.set_margin_right(10);  
+        //  this.stack_ap.set_size_request(600, 500);      
         this.box_main.add(this.stack_ap);
         this.box_dev = new ListBox();
         this.vp_dev.add(this.box_dev);
@@ -149,6 +150,7 @@ class MainUi : Gtk.Box {
     }
 
     public void addAccessPoints(GenericArray<NM.AccessPoint> _aps, WifiUtility.WifiDevice _device) {
+        stdout.printf("\n\nhere\n\n");        
         GenericArray<NM.AccessPoint> _own_aps = _aps;
         if(_device.added && _device.index < scroll_aps.length - 1) {
             Box _box_ap = box_aps[_device.index + 1];
@@ -187,9 +189,15 @@ class MainUi : Gtk.Box {
                     if(_matched) {
                         _matched_indexs.remove_fast(jjj);
                         _matched_indexs.add(jjj);
-                        Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _ap_connection.get_path());                        
-                        ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection);
+                        Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _ap_connection.get_path()); 
+                        //  NM.SettingIP4Config _ip4_config = _ap_connection.get_setting_ip4_config();
+                        //  NM.IP4Address a1 = _ip4_config.get_address(0);
+                        //  NM.IP4Address a2 = a1.dup();
+                        //  ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection, a1);
+                        //  ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection, a2);
+                        // 
                         ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection);
+                        ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection); 
                         _box_ap.add(_applet);
                         _box_all.add(applet_all);
                     }

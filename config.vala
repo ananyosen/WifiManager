@@ -86,7 +86,13 @@ class ConfigIP : Box {
         this.radio_dhcp.toggled.connect(handle_toggle);
         this.radio_static.toggled.connect(handle_toggle);
         this.is_dhcp4 = _is_dhcp4;
-        this.radio_dhcp.active = this.is_dhcp4;
+        this.dns_list = new GenericArray<DnsUi>();        
+        if(this.is_dhcp4) {
+            this.radio_dhcp.active = true;
+        }
+        else {
+            this.radio_static.active = true;
+        }
         this.box_ip.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
         this.box_dns.set_sensitive(!this.is_dhcp4); //fix TODO: DONE
         if(!this.is_dhcp4) {
@@ -105,7 +111,7 @@ class ConfigIP : Box {
             if(_num_dns > 0) {
                 this.entry_dns1.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(0));
                 if(_num_dns > 1) {
-                    this.entry_dns1.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(1));
+                    this.entry_dns2.text = Helper.networkIntToIp4Dotted(this.setting_ip4_config.get_dns(1));
                 }
                 for(int kkk = 2; kkk < _num_dns; kkk++) {
                     DnsUi dns_ui = new DnsUi(dns_list.length);
@@ -117,7 +123,6 @@ class ConfigIP : Box {
                 }
             }
         }
-        this.dns_list = new GenericArray<DnsUi>();
         this.button_cancel.clicked.connect(() => {
             closeUnsaved();
         });

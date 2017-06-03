@@ -145,4 +145,34 @@ class Helper : GLib.Object {
 		res = res.substring(0, res.length - 1);
 		return res;
 	}
+
+	public static string getStringPart(string _src, string _start, string _end) {
+		//  string _start = "addresses : ";
+		//  string _end = "(";
+		string _part = "";
+		uint _index_start = _src.index_of(_start, 0);
+		uint _index_end = _src.index_of(_end, (int)_index_start);
+		_part = _src.substring(_index_start + _start.length, _index_end - _index_start - _start.length).strip();
+		return _part;
+	}
+
+	public static GenericArray<Array<string>> parseSettingString(string _setting) {
+		string parsed = Helper.getStringPart(_setting, "addresses : ", "(");
+		GenericArray<Array<string>> data = new GenericArray<Array<string>>();
+		string[] parsed_parts = parsed.split(";");
+		foreach(string _parsed_part in parsed_parts) {
+			_parsed_part = _parsed_part.strip();
+			string[] _ip_parts = _parsed_part.split(",");
+			string _ip = Helper.getStringPart(_ip_parts[0], "{ ip = ", "/");
+			string _netmask = _ip_parts[0].split("/")[1];
+			string _gateway = Helper.getStringPart(_ip_parts[1], "gw = ", " }");
+			Array<string> _current_ip4 = new Array<string>();
+			_current_ip4.append_val(_ip);
+			_current_ip4.append_val(_netmask);
+			_current_ip4.append_val(_gateway);
+			data.add(_current_ip4);
+			//  stdout.printf("x" + _gateway + "x\n");
+		}
+		return data;
+	}
 }

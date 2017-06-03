@@ -10,9 +10,9 @@ public void mainWindowDestroyed() {
 }
 
 GenericArray<WifiDevice> devices;
-Window main_window;
-MainUi main_ui;
-Manager manager;
+Window main_window = null;
+MainUi main_ui = null;
+Manager manager = null;
 NM.RemoteSettings remote_settings;
 ulong connections_read_handler = 0;
 
@@ -25,7 +25,14 @@ void initializeWireless() {
     }
     main_ui.destroyData();
     main_ui.init();
+    if(manager != null) {
+        manager.destroy();
+    }
     manager = new Manager();
+    manager.devices_changed_handler = manager.devicesChanged.connect(() => {
+        initializeWireless();
+        initializeDevices();
+    });
     manager.initDevices();
     devices = manager.getDevices();
     if(devices.length == 0) {
@@ -34,6 +41,12 @@ void initializeWireless() {
     for(int iii = 0; iii < devices.length; iii++) {
         devices[iii].index = iii;
         WifiDevice dev = devices[iii];
+        dev.getRawDevice().state_changed.connect((_dev, ns, os, reason) =>{
+            stdout.printf("\n\nstate changed\n\n");
+            main_ui.wifi_on = manager.wifiEnabled;
+            //initializeWireless();
+            //initializeDevices();
+        });
         main_ui.addDeviceUi(dev);
         //  dev.scan();
         //  dev.scanDone.connect((_dev)=> {
@@ -130,7 +143,7 @@ int main(string[] args) {
         manager.wifiEnabled = main_ui.wifi_on;
     });
     main_ui.startScan.connect(()=>{
-        stdout.printf("\n\n scan started \n\n");
+        //  stdout.printf("\n\n scan started \n\n");
         for(int iii = 0; iii < devices.length; iii++) {
             devices[iii].scan();
         }        
@@ -143,6 +156,7 @@ int main(string[] args) {
         #remove_dns{color: #ff3333;}
         #ap_list{background-color: #ffffff; border: 1px solid #ccc; border-radius: 3px;}
         #ap_applet{border-bottom: 1px solid #ccc;}
+        #applet_ip_container{border-top: 1px dashed #ccc;}
         #dev_list{border-radius: 3px;}
         #main_window{}";
     try {

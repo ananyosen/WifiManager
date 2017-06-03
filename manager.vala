@@ -23,15 +23,28 @@ namespace WifiUtility {
         public uint num_of_devices {
             get {return wifi_devices.length;}
         }
+
+        public ulong devices_changed_handler;
         
         public Manager() {
             this.client = new NM.Client();
+            this.client.device_added.connect((_client, _device) => {
+                if(_device.get_device_type() == NM.DeviceType.WIFI) {
+                    devicesChanged();
+                }
+            });
+            this.client.device_removed.connect((_client, _device) => {
+                if(_device.get_device_type() == NM.DeviceType.WIFI) {
+                    devicesChanged();
+                }
+            });
             this.wifi_devices = new GenericArray<WifiDevice>();
             this.remote_connections = new GenericArray<RemoteConnection>();
         }
 
         public signal void networksRead();
         public signal void connectionsChanged();
+        public signal void devicesChanged();
 
         public bool initDevices() {
             bool _foundWifi = false;
@@ -54,7 +67,7 @@ namespace WifiUtility {
                 RemoteConnection _remote_connection = _remote_connections.nth_data(iii);
                 if(_remote_connection.is_type("802-11-wireless")) {
                     _remote_connection.removed.connect((_src) => {
-                        stdout.printf("\n\nmanager: connections removed\n\n");
+                        //  stdout.printf("\n\nmanager: connections removed\n\n");
                         this.remote_connections.remove_fast(_src);
                         this.connectionsChanged();
                     });
@@ -63,6 +76,10 @@ namespace WifiUtility {
             }
             _remote_connections = null;
             networksRead();
+        }
+
+        public void destroy() {
+            //TODO
         }
 
         //  public void readSavedNetworks(NM.RemoteSettings _remote_settings) {
