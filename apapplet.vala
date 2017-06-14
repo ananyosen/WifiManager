@@ -121,10 +121,8 @@
             string _ip4_method = this.setting_ip4_config.method;
             this.is_dhcp4 = (_ip4_method == "auto");
         }
-        //  if(!this.is_dhcp4) {
-        //      this.default_ip4 = this.setting_ip4_config.get_address(0);
-        //  }
-        this.button_delete.set_sensitive(this.matched);
+       this.button_delete.set_sensitive(this.matched);
+       this.button_mod_connect.set_sensitive(this.matched);
         this.mac = _ap.bssid;
         this.ssid = NM.Utils.ssid_to_utf8(_ap.get_ssid());
         this.freq = _ap.frequency.to_string();
@@ -137,16 +135,19 @@
 
                 /**
                  * Method 1: NM.IP4Address = NM.SettingIP4Config.get_address(index);
-                 * NM.IP4Address causes segfault on deref 
+                 * 
+                 * problem: NM.IP4Address causes segfault on deref 
                  * and probably .get_address(index) removes it from NM.SettingIP4Config
                  **/    
 
                 /**
-                 * Method 2: netmask not always accurate
+                 * Method 2: 
                  * 
                  * HashTable <string, GLib.Value?> _setting_ip4_config = this.setting_ip4_config.to_hash(NM.SettingHashFlags.NO_SECRETS);
                 weak GenericArray<Array<uint>> _addresses = (GenericArray<Array<uint>>) _setting_ip4_config.@get("addresses");
                 Array<uint> _ip4_network_ints = _addresses[0];
+                *
+                * problem:  netmask not always accurate
                 *
                 **/
 
@@ -173,25 +174,33 @@
         }
         button_connect.clicked.connect(() => {
             NM.Client _client = new NM.Client();
-            if(/*this.matched*/false) {
+            if(this.matched) {
+                _client.activate_connection(
+                    this.remote_connection, 
+                    this.device.getRawDevice(),
+                    this.access_point.get_path(),
+                    (one, two, three) => {
 
+                    }
+                );
             }
             else {
-                NM.SettingIP4Config _sett = new NM.SettingIP4Config();
-                if(this.modified) {
-                    _sett.add_address(this.default_ip4);
-                }
-                stdout.printf("\n\nsett\n\n" + _sett.to_string());
+                //  NM.SettingIP4Config _sett = new NM.SettingIP4Config();
+                //  if(this.modified) {
+                //      _sett.add_address(this.default_ip4);
+                //  }
+                //  stdout.printf("\n\nsett\n\n" + _sett.to_string());
                 //  NM.Connection _cnn = new NM.Connection.from_hash(
                 //      (HashTable<string,GLib.HashTable<weak void*,weak void*>>)_sett.to_hash(NM.SettingHashFlags.ALL)
                 //      );
+                NM.Connection _cnn = new NM.Connection();
                 //  _cnn.add_setting(_sett);
                 _client.add_and_activate_connection(
                     _cnn,
                     this.device.getRawDevice(),
                     this.access_point.get_path(),
                     (client, device, path, error) => {
-
+                        
                     }
                 );
             }
