@@ -1,0 +1,63 @@
+#version info, major.minor:patch
+version:
+  major: 0
+  minor: 1
+  patch: 0
+
+# libs required to run the executable
+# if something is missing, will warn when running the generator
+# run 'make run_deps' to install missing deps
+run_deps: 
+  - libnm-util 
+  - libnm-glib
+  - libgtk+-3.0
+
+# libs required to builds the executable 
+# if something is missing, will warn when running the generator
+# run 'make dev_deps' to install missing deps
+dev_deps:
+  - libnm-util-dev
+  - libnm-glib-dev
+  - libgtk+-3.0-dev
+
+# vala files compiled, in deps order
+# custom search path can be specified as
+# - custom.vala: "/this/can/be/relative/or/absolute/"
+vala_files: 
+  - one.vala
+  - two.vala: 
+      path: "/home/dexter/projects/vala/four/src"
+  - three.vala:
+      path: "./deps/"
+
+# vala ui files, composite templates, in deps order(optionally)
+# generator will try to find the corresponding vala file and compile it
+# if not found a warning will be shown
+# example. if an ui file is added as hello.ui, it will try to find and add helloui.vala to vala_files
+# custom vala can be specified as 
+# - custom.ui
+#     path: "/this/can/be/relative/or/absolute/any.ui"
+#     vala_path: "/this/can/be/relative/or/absolute/whatever.vala"
+# using 'null' as vala path will ensure the generator will not add anything to vala compile list
+# and also wont warn
+ui_files:
+  - one.ui
+  - two.ui: 
+      path: "."
+      vala_path: "."
+  - three.ui
+
+# res.xml path
+res_xml: "res.xml" #"/this/can/be/relative/or/absolute/any.xml"
+
+# build options
+debug_build: true
+
+release_build: true
+
+c_path:  #"/this/can/be/relative/or/absolute/"
+debug_path: #"/this/can/be/relative/or/absolute/"
+release_path: #"/this/can/be/relative/or/absolute/"
+
+release_executable: "run"
+debug_executable: "debug_run"
