@@ -1,6 +1,7 @@
 *.c
 *.o
 run
+debug_run
 *.ui~
 *.txt
 *.ui#
