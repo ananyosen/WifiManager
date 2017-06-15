@@ -61,3 +61,5 @@ release_path: #"/this/can/be/relative/or/absolute/"
 
 release_executable: "run"
 debug_executable: "debug_run"
+
+makefile: Makefile_test

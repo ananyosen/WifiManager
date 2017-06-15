@@ -13,35 +13,17 @@ dev_deps = build_opts["dev_deps"] || []
 
 vala_files = []
 
-def path_format(_path)
-	pwd = FileUtils.pwd()
-	if _path == "null"
-		return
+def path_format(_path, is_dir)
+	_pwd = Dir.pwd()
+	_home = Dir.home()
+	if _path.start_with?("~/")
+		_path.gsub!("~/", _home + "/")
 	end
-	if _path.start_with?("/") or _path.start_with?("~")
-		if not _path.end_with?("/")
-			_path = _path + "/"
-		end
-		return(_path)
-	else if _path.start_with?("./")
-			_path.gsub!("./", "")
-			_path = pwd + "/" + _path
-			if not _path.end_with?("/")
-				_path = _path + "/"
-			end
-			return(_path)
-		else if _path == "."
-				_path = pwd + "/"
-				return (_path)
-			else
-				_path = pwd + "/" + _path
-				if not _path.end_with?("/")
-					_path = _path + "/"
-				end
-				return(_path)
-			end
-		end
+	_path = File.absolute_path(_path)
+	if is_dir and (not _path.end_with?("/"))
+		_path = _path + "/"
 	end
+	return _path
 end
 
 if build_opts.key?("vala_files")
@@ -51,7 +33,7 @@ if build_opts.key?("vala_files")
 			vala_files.push(pwd + "/" + _x)
 		else if _x.values()[0].key?("path")
 				_path = _x.values()[0]["path"]
-				path = path_format(_path)
+				path = path_format(_path, true)
 				vala_files.push(path + _x.keys()[0])
 			else
 				puts "Invalid path for file #{_x.to_s()}"
@@ -71,7 +53,7 @@ if build_opts.key?("ui_files")
 
 		else if _x.values()[0].key?("path")
 				_path = _x.values()[0]["path"]
-				path = path_format(_path)
+				path = path_format(_path, true)
 				# vala_path = path_format(_x, "vala_path")
 				ui_files.push(path + _x.keys()[0])
 			else
@@ -94,20 +76,24 @@ if do_release
 end
 
 _c_path = build_opts["c_path"] || "./builds/"
-c_path = path_format(_c_path)
+c_path = path_format(_c_path, true)
 
 if do_debug 
 	_debug_path = build_opts["debug_path"] || "./builds/debug"
-	debug_path = path_format(_debug_path)
+	debug_path = path_format(_debug_path, true)
 end
 
 if do_release 
 	_release_path = build_opts["release_path"] || "./builds/release"
-	release_path = path_format(_release_path)
+	release_path = path_format(_release_path, true)
 end
+
+_makefile = build_opts["makefile"] || "./Makefile"
+makefile = path_format(_makefile, false)
 
 p vala_files
 p ui_files
 p c_path
 p debug_path
 p release_path
+p makefile
