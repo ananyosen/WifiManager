@@ -4,21 +4,12 @@ version:
   minor: 1
   patch: 0
 
-# libs required to run the executable
-# if something is missing, will warn when running the generator
-# run 'make run_deps' to install missing deps
-run_deps: 
-  - libnm-util 
-  - libnm-glib
-  - libgtk+-3.0
 
 # libs required to builds the executable 
-# if something is missing, will warn when running the generator
-# run 'make dev_deps' to install missing deps
 dev_deps:
-  - libnm-util-dev
-  - libnm-glib-dev
-  - libgtk+-3.0-dev
+  - libnm-util
+  - libnm-glib
+  - gtk+-3.0
 
 # vala files compiled, in deps order
 # custom search path can be specified as
@@ -43,12 +34,13 @@ vala_files:
 ui_files:
   - one.ui
   - two.ui: 
-      path: "."
+      path: "/dex/ff"
       vala_path: "."
   - three.ui
+  - open.ui
 
 # res.xml path
-res_xml: "res.xml" #"/this/can/be/relative/or/absolute/any.xml"
+res_xml: "res2.xml" #"/this/can/be/relative/or/absolute/any.xml"
 
 # build options
 debug_build: true
