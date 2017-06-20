@@ -46,7 +46,7 @@ _mod_src_path = build_opts["modified_src_path"] || "./modified_src"
 mod_src_path = path_format(_mod_src_path, true)
 if not Dir.exist?(mod_src_path)
 	puts colorize_output("[INFO] dir #{mod_src_path} not found, creating it", "magenta")
-#uncomment	`mkdir -p #{mod_src_path}`
+	`mkdir -p #{mod_src_path}`
 end
 
 
