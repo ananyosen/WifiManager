@@ -5,3 +5,5 @@ debug_run
 *.ui~
 *.txt
 *.ui#
+./builds
+./modified_src

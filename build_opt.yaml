@@ -15,11 +15,15 @@ dev_deps:
 # custom search path can be specified as
 # - custom.vala: "/this/can/be/relative/or/absolute/"
 vala_files: 
-  - one.vala
-  - two.vala: 
-      path: "/home/dexter/projects/vala/four/src"
-  - three.vala:
-      path: "./deps/"
+  - helper.vala
+  - wifidevice.vala
+  - manager.vala
+  - dns.ui.vala
+  - config.ui.vala
+  - apapplet.ui.vala
+  - device.ui.vala
+  - main.ui.vala
+  - run.vala
 
 # vala ui files, composite templates, in deps order(optionally)
 # generator will try to find the corresponding vala file and compile it
@@ -32,13 +36,11 @@ vala_files:
 # using 'null' as vala path will ensure the generator will not add anything to vala compile list
 # and also wont warn
 ui_files:
-  - one.ui
-  - two.ui: 
-      path: "/dex/ff"
-      vala_path: "."
-  - three.ui
-  - open.ui
-
+  - apapplet.ui
+  - dns.ui
+  - config.ui
+  - device.ui
+  - main.ui
 # res.xml path
 res_xml: "res2.xml" #"/this/can/be/relative/or/absolute/any.xml"
 
@@ -50,6 +52,7 @@ release_build: true
 c_path:  #"/this/can/be/relative/or/absolute/"
 debug_path: #"/this/can/be/relative/or/absolute/"
 release_path: #"/this/can/be/relative/or/absolute/"
+modified_src_path: #"/this/can/be/relative/or/absolute/"
 
 release_executable: "run"
 debug_executable: "debug_run"

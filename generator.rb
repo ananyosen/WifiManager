@@ -17,6 +17,17 @@ ui_vala_files = []
 object_files_release = []
 object_files_debug = []
 
+
+def colorize_output(_text, _color)
+	_color_hash = {
+		"black" => 0,"red" => 1,"green" =>2 ,"yellow" =>3 ,"blue" =>4 ,"magenta" =>5 ,"cyan" =>6 ,"white"  => 7
+	}
+	if not _color_hash.key?(_color)
+		return _text
+	end
+	"\033[#{_color_hash[_color] + 30}m #{_text} \033[0m"
+end
+
 def path_format(_path, is_dir)
 	_pwd = Dir.pwd()
 	_home = Dir.home()
@@ -31,6 +42,36 @@ def path_format(_path, is_dir)
 	return _path
 end
 
+_mod_src_path = build_opts["modified_src_path"] || "./modified_src"
+mod_src_path = path_format(_mod_src_path, true)
+if not Dir.exist?(mod_src_path)
+	puts colorize_output("[INFO] dir #{mod_src_path} not found, creating it", "magenta")
+#uncomment	`mkdir -p #{mod_src_path}`
+end
+
+
+
+def get_raw_filename(fname) 
+	fname[fname.rindex("/")+1..fname.length - 1]
+end
+
+def template_format(_vala_fname, _ui_fname, _modified_path) 
+	_file = File.open(_vala_fname, "r")
+	_buf = ""
+	_file.each{|_line|
+		_t = _line
+		if _line.include?("GtkTemplate")
+			_t = "[GtkTemplate (ui = \"" + _ui_fname + "\" )]"
+		end
+		_buf = _buf + _t
+	}
+	_file.close()
+	_new_path = _modified_path + get_raw_filename(_vala_fname)
+	_file_write = File.open(_new_path, "w")
+	_file_write.write(_buf)
+	_file_write.close()
+end
+
 if build_opts.key?("vala_files")
 	_tmp = build_opts["vala_files"]
 	_tmp.each {|_x|
@@ -41,7 +82,7 @@ if build_opts.key?("vala_files")
 				path = path_format(_path, true)
 				vala_files.push(path + _x.keys()[0])
 			else
-				puts "Invalid path for file #{_x.to_s()}"
+				puts colorize_output("[FATAL] Invalid path for file #{_x.to_s()}", "red")
 			end
 		end
 	}
@@ -52,14 +93,31 @@ if build_opts.key?("ui_files")
 	_tmp.each {|_x|
 		if not _x.is_a?(Hash)
 			ui_files.push(pwd + "/" + _x)
+			#assume file name to be pwd/sample.ui.vala
+			begin
+				template_format(pwd + "/" + _x + ".vala", pwd + "/" + _x, mod_src_path)
+			rescue Exception => err
+				puts colorize_output("[WARN] can't find proper vala for #{pwd + "/" + _x}, may not compile", "yellow")
+				puts colorize_output("[ERROR] #{err.message}", "red")
+			end
 
 		else if _x.values()[0].key?("path")
 				_path = _x.values()[0]["path"]
 				path = path_format(_path, true)
+				_vala_path = _x.values()[0]["vala_path"]
+				if not _vala_path == "null"
+					_vala_path = path_format(_vala_path, false)
+					begin
+						template_format(_vala_path, path + _x.keys()[0], mod_src_path)
+					rescue Exception => err
+						puts colorize_output("[WARN] can't find proper vala for #{pwd + "/" + _x.keys()[0]}, may not compile", "yellow")
+						puts colorize_output("[ERROR] #{err.message}", "red")
+					end
+				end
 				# vala_path = path_format(_x, "vala_path")
 				ui_files.push(path + _x.keys()[0])
 			else
-				puts "Invalid path for file #{_x.to_s()}"
+				puts colorize_output("[FATAL] Invalid path for file #{_x.to_s()}", "red")
 			end
 		end
 
@@ -124,7 +182,8 @@ make_file = File.open(makefile, "w")
 if do_release
 	_deps_list = dev_deps.reduce {|a,b| a + " " + b}
 	_deps_params = "`pkg-config --cflags #{_deps_list} gmodule-export-2.0`"
-
+	_deps_params_final = "`pkg-config --libs #{_deps_list} gmodule-export-2.0`"
+	
 	make_file.write(
 		"release: compile_vala compile_res
 	[ -d \"#{release_path}\" ] || mkdir -p \"#{release_path}\"
@@ -132,7 +191,7 @@ if do_release
 	)
 
 	vala_files.each {|_vala_file|
-		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.length - 1]
+		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.rindex(".vala") - 1]
 		make_file.write(
 		"#{release_path}#{_vala_file_name}.o: #{c_path}#{_vala_file_name}.c
 	gcc -o $@ -c $< -Wall #{_deps_params}\n\n"
@@ -153,7 +212,7 @@ if do_release
 	#final exec
 	make_file.write(
 		"#{release_exec}: #{_object_files_all}
-	gcc -o #{release_path}#{release_exec}  $^ #{_deps_params}\n\n"
+	gcc -o #{release_path}#{release_exec}  $^ #{_deps_params_final}\n\n"
 		)
 end
 
@@ -162,6 +221,7 @@ end
 if do_debug
 	_deps_list = dev_deps.reduce {|a,b| a + " " + b}
 	_deps_params = "`pkg-config --cflags #{_deps_list} gmodule-export-2.0`"
+	_deps_params_final = "`pkg-config --libs #{_deps_list} gmodule-export-2.0`"
 
 	make_file.write(
 		"debug: compile_vala compile_res
@@ -170,7 +230,7 @@ if do_debug
 	)
 
 	vala_files.each {|_vala_file|
-		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.length - 1]
+		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.rindex(".vala") - 1]
 		make_file.write(
 		"#{debug_path}#{_vala_file_name}.o: #{c_path}#{_vala_file_name}.c
 	gcc -o $@ -g -c $< -Wall #{_deps_params}\n\n"
@@ -191,14 +251,22 @@ if do_debug
 	#final exec
 	make_file.write(
 		"#{debug_exec}: #{_object_files_all}
-	gcc -o #{debug_path}#{debug_exec} $^ -g #{_deps_params}\n\n"
+	gcc -o #{debug_path}#{debug_exec} $^ -g #{_deps_params_final}\n\n"
 		)
 end
 
 #do compile vala
 
 _pkg = dev_deps.reduce {|a, b| a + " --pkg " + b}
-_valas = vala_files.reduce {|a,b| a + " " + b}
+_mod_vala_files = []
+vala_files.each {|_x|
+	_p = _x
+	if _x.end_with?("ui.vala") 
+		_p = mod_src_path + get_raw_filename(_x)
+	end
+	_mod_vala_files.push(_p)
+}
+_valas = _mod_vala_files.reduce {|a,b| a + " " + b}
 make_file.write(
 	"compile_vala:
 	[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
