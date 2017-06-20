@@ -7,3 +7,4 @@ debug_run
 *.ui#
 ./builds
 ./modified_src
+./modified_src/*
