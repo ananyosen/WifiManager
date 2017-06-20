@@ -15,15 +15,15 @@ dev_deps:
 # custom search path can be specified as
 # - custom.vala: "/this/can/be/relative/or/absolute/"
 vala_files: 
-  - helper.vala
-  - wifidevice.vala
-  - manager.vala
-  - dns.ui.vala
-  - config.ui.vala
-  - apapplet.ui.vala
-  - device.ui.vala
-  - main.ui.vala
-  - run.vala
+  - helper.vala: ./src
+  - wifidevice.vala: ./src
+  - manager.vala: ./src
+  - dns.ui.vala: ./src
+  - config.ui.vala: ./src
+  - apapplet.ui.vala: ./src
+  - device.ui.vala: ./src
+  - main.ui.vala: ./src
+  - run.vala: ./src
 
 # vala ui files, composite templates, in deps order(optionally)
 # generator will try to find the corresponding vala file and compile it
@@ -36,13 +36,23 @@ vala_files:
 # using 'null' as vala path will ensure the generator will not add anything to vala compile list
 # and also wont warn
 ui_files:
-  - apapplet.ui
-  - dns.ui
-  - config.ui
-  - device.ui
-  - main.ui
+  - apapplet.ui:
+      path: ./src
+      vala_path: ./src/apapplet.ui.vala
+  - dns.ui:
+      path: ./src
+      vala_path: ./src/dns.ui.vala
+  - config.ui:
+      path: ./src
+      vala_path: ./src/config.ui.vala
+  - device.ui:
+      path: ./src
+      vala_path: ./src/device.ui.vala
+  - main.ui:
+      path: ./src
+      vala_path: ./src/main.ui.vala
 # res.xml path
-res_xml: "res2.xml" #"/this/can/be/relative/or/absolute/any.xml"
+res_xml: res.xml #"/this/can/be/relative/or/absolute/any.xml"
 
 # build options
 debug_build: true
@@ -57,4 +67,4 @@ modified_src_path: #"/this/can/be/relative/or/absolute/"
 release_executable: "run"
 debug_executable: "debug_run"
 
-makefile: Makefile_test
+makefile: Makefile

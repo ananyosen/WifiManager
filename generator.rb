@@ -1,6 +1,9 @@
+#!/usr/bin/ruby
+
 require 'yaml'
 require 'fileutils'
 require 'pathname'
+require 'getoptlong'
 
 build_opts = YAML.load_file("build_opt.yaml")
 pwd = FileUtils.pwd()
@@ -43,13 +46,6 @@ def path_format(_path, is_dir)
 	return _path
 end
 
-_mod_src_path = build_opts["modified_src_path"] || "./modified_src"
-mod_src_path = path_format(_mod_src_path, true)
-if not Dir.exist?(mod_src_path)
-	puts colorize_output("[INFO] dir #{mod_src_path} not found, creating it", "magenta")
-	`mkdir -p #{mod_src_path}`
-end
-
 def get_raw_filename(fname) 
 	fname[fname.rindex("/")+1..fname.length - 1]
 end
@@ -66,7 +62,7 @@ def template_format(_vala_fname, _ui_fname, _modified_path)
 	_file.each{|_line|
 		_t = _line
 		if _line.include?("GtkTemplate")
-			_t = "[GtkTemplate (ui = \"" + _ui_fname + "\" )]"
+			_t = "[GtkTemplate (ui = \"" + _ui_fname + "\" )]\n"
 		end
 		_buf = _buf + _t
 	}
@@ -76,6 +72,60 @@ def template_format(_vala_fname, _ui_fname, _modified_path)
 	_file_write.write(_buf)
 	_file_write.close()
 end
+
+def reload_vala
+	_build_opts = YAML.load_file("build_opt.yaml")
+	_tmp = _build_opts["ui_files"]
+	_mod_src_path = _build_opts["modified_src_path"] || "./modified_src"
+	mod_src_path = path_format(_mod_src_path, true)
+	pwd = Dir.pwd
+	_tmp.each {|_x|
+		if not _x.is_a?(Hash)
+			begin
+				template_format(pwd + "/" + _x + ".vala", pwd + "/" + _x, mod_src_path)
+			rescue Exception => err
+				puts colorize_output("[WARN] can't find proper vala for #{pwd + "/" + _x}, may not compile", "yellow")
+				puts colorize_output("[ERROR] #{err.message}", "red")
+			end
+		else if _x.values()[0].key?("path")
+				_path = _x.values()[0]["path"]
+				path = path_format(_path, true)
+				_vala_path = _x.values()[0]["vala_path"]
+				if not _vala_path == "null"
+					_vala_path = path_format(_vala_path, false)
+					begin
+						template_format(_vala_path, path + _x.keys()[0], mod_src_path)
+					rescue Exception => err
+						puts colorize_output("[WARN] can't find proper vala for #{pwd + "/" + _x.keys()[0]}, may not compile", "yellow")
+						puts colorize_output("[ERROR] #{err.message}", "red")
+					end
+				end
+			end
+		end
+	}
+end
+
+
+opts = GetoptLong.new(
+	['--reload-vala', '-r' , GetoptLong::NO_ARGUMENT]
+)
+
+opts.each {|opt, arg|
+	case opt
+		when '--reload-vala'
+			puts colorize_output("[INFO] reloading vala files corresponding to templates", "blue")
+			reload_vala()
+			exit
+	end
+}
+
+_mod_src_path = build_opts["modified_src_path"] || "./modified_src"
+mod_src_path = path_format(_mod_src_path, true)
+if not Dir.exist?(mod_src_path)
+	puts colorize_output("[INFO] dir #{mod_src_path} not found, creating it", "magenta")
+	`mkdir -p #{mod_src_path}`
+end
+
 
 if build_opts.key?("vala_files")
 	_tmp = build_opts["vala_files"]
@@ -163,20 +213,26 @@ res_xml = path_format(_res_xml, false)
 res_file = File.open(res_xml, "w")
 res_file.write(
 	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<gresources>\n"
+<gresources>
+	<gresource prefix=\"#{Dir.pwd}\">\n"
 	)
 ui_files.each {|_ui_file|
 	_rindex = _ui_file.rindex("/")
-	_prefix = _ui_file[0.._rindex]
+	_dir = _ui_file[0.._rindex]
+	_relative_path = rel_path_from_pwd(_dir)
+	if _relative_path == (".")
+		_relative_path = _relative_path[1.._relative_path.length - 1]
+	else
+		_relative_path = _relative_path + "/"
+	end
 	_file_name = _ui_file[_rindex + 1.._ui_file.length - 1]
 	res_file.write(
-		"	<gresource prefix=\"#{_prefix}\">
-    <file compressed=\"true\" preprocess=\"xml-stripblanks\">#{_file_name}</file>
-  </gresource>\n"
+		"		<file compressed=\"true\" preprocess=\"xml-stripblanks\">#{_relative_path}#{_file_name}</file>\n"
 		)
 }
 res_file.write(
-	"</gresources>"
+	"	</gresource>
+</gresources>"
 	)
 res_file.close()
 #done
@@ -203,8 +259,8 @@ if do_release
 	
 	make_file.write(
 		"release: compile_vala compile_res
-	[ -d \"#{release_path}\" ] || mkdir -p \"#{release_path}\"
-	cd \"#{release_path}\" && $(MAKE) -f \"#{makefile}\" #{release_exec}\n\n"
+	@[ -d \"#{release_path}\" ] || mkdir -p \"#{release_path}\"
+	@cd \"#{release_path}\" && $(MAKE) -f \"#{makefile}\" #{release_exec}\n\n"
 	)
 
 	_mod_vala_files.each {|_vala_file|
@@ -244,8 +300,8 @@ if do_debug
 
 	make_file.write(
 		"debug: compile_vala compile_res
-	[ -d \"#{debug_path}\" ] || mkdir -p \"#{debug_path}\"
-	cd \"#{debug_path}\" && $(MAKE) -f \"#{makefile}\" #{debug_exec}\n\n"
+	@[ -d \"#{debug_path}\" ] || mkdir -p \"#{debug_path}\"
+	@cd \"#{debug_path}\" && $(MAKE) -f \"#{makefile}\" #{debug_exec}\n\n"
 	)
 
 	_mod_vala_files.each {|_vala_file|
@@ -280,10 +336,18 @@ end
 
 _valas = _mod_vala_files.reduce {|a,b| a + " " + b}
 make_file.write(
-	"compile_vala:
-	[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
+	"compile_vala: reload_vala
+	@[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
 	valac --pkg #{_pkg} #{_valas}  --target-glib=2.38 --gresources #{res_xml} -C -d #{c_path}\n\n"
 	)
+
+#do reload vala
+
+make_file.write(
+	"reload_vala:
+	@[ -d #{mod_src_path} ] || mkdir -p #{mod_src_path}
+	ruby #{__FILE__} -r\n\n"
+)
 
 #do compile res
 
@@ -291,7 +355,7 @@ _uis = ui_files.reduce {|a,b| a + " " + b}
 _res_file_name = res_xml[res_xml.rindex("/")+1..res_xml.length - 1]
 make_file.write(
 	"compile_res: #{res_xml} #{_uis}
-	[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
+	@[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
 	glib-compile-resources #{res_xml} --target=#{c_path}#{_res_file_name}.c --sourcedir=$(srcdir) --c-name _ap --generate-source\n\n"
 	)
 
@@ -301,9 +365,10 @@ make_file.write(
 
 make_file.write(
 	"clean:
-	rm -rfv #{release_path}
-	rm -rfv #{debug_path}
-	rm -rfv #{c_path}\n\n"
+	@rm -rfv #{release_path}
+	@rm -rfv #{debug_path}
+	@rm -rfv #{mod_src_path}
+	@rm -rfv #{c_path}\n\n"
 	)
 
 #do all
