@@ -32,7 +32,7 @@ vala_files:
 # custom vala can be specified as 
 # - custom.ui
 #     path: "/this/can/be/relative/or/absolute/any.ui"
-#     vala_path: "/this/can/be/relative/or/absolute/whatever.vala"
+#     vala_path: "/this/can/be/relative/or/absolute/whatever.ui.vala"
 # using 'null' as vala path will ensure the generator will not add anything to vala compile list
 # and also wont warn
 ui_files:

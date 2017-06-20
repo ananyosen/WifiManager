@@ -1,5 +1,6 @@
 require 'yaml'
 require 'fileutils'
+require 'pathname'
 
 build_opts = YAML.load_file("build_opt.yaml")
 pwd = FileUtils.pwd()
@@ -49,10 +50,14 @@ if not Dir.exist?(mod_src_path)
 	`mkdir -p #{mod_src_path}`
 end
 
-
-
 def get_raw_filename(fname) 
 	fname[fname.rindex("/")+1..fname.length - 1]
+end
+
+def rel_path_from_pwd(_path)
+	_p1 = Pathname.new(_path)
+	_p2 = Pathname.new(Dir.pwd)
+	_p1.relative_path_from(_p2).to_s
 end
 
 def template_format(_vala_fname, _ui_fname, _modified_path) 
@@ -77,8 +82,8 @@ if build_opts.key?("vala_files")
 	_tmp.each {|_x|
 		if not _x.is_a?(Hash)
 			vala_files.push(pwd + "/" + _x)
-		else if _x.values()[0].key?("path")
-				_path = _x.values()[0]["path"]
+		else if _x.values()[0].is_a?(String)
+				_path = _x.values()[0]
 				path = path_format(_path, true)
 				vala_files.push(path + _x.keys()[0])
 			else
@@ -177,7 +182,19 @@ res_file.close()
 #done
 
 #write makefile
+
 make_file = File.open(makefile, "w")
+
+_pkg = dev_deps.reduce {|a, b| a + " --pkg " + b}
+_mod_vala_files = []
+vala_files.each {|_x|
+	_p = _x
+	if _x.end_with?(".ui.vala") 
+		_p = mod_src_path + get_raw_filename(_x)
+	end
+	_mod_vala_files.push(_p)
+}
+
 #release block
 if do_release
 	_deps_list = dev_deps.reduce {|a,b| a + " " + b}
@@ -190,10 +207,12 @@ if do_release
 	cd \"#{release_path}\" && $(MAKE) -f \"#{makefile}\" #{release_exec}\n\n"
 	)
 
-	vala_files.each {|_vala_file|
+	_mod_vala_files.each {|_vala_file|
 		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.rindex(".vala") - 1]
+		_vala_file_dir = _vala_file[0.._vala_file.rindex("/")]
+		_rel_path = rel_path_from_pwd(_vala_file_dir)
 		make_file.write(
-		"#{release_path}#{_vala_file_name}.o: #{c_path}#{_vala_file_name}.c
+		"#{release_path}#{_vala_file_name}.o: #{c_path}#{_rel_path}/#{_vala_file_name}.c
 	gcc -o $@ -c $< -Wall #{_deps_params}\n\n"
 		)
 		object_files_release.push("#{release_path}#{_vala_file_name}.o")
@@ -229,10 +248,12 @@ if do_debug
 	cd \"#{debug_path}\" && $(MAKE) -f \"#{makefile}\" #{debug_exec}\n\n"
 	)
 
-	vala_files.each {|_vala_file|
+	_mod_vala_files.each {|_vala_file|
 		_vala_file_name = _vala_file[_vala_file.rindex("/")+1.._vala_file.rindex(".vala") - 1]
+		_vala_file_dir = _vala_file[0.._vala_file.rindex("/")]
+		_rel_path = rel_path_from_pwd(_vala_file_dir)
 		make_file.write(
-		"#{debug_path}#{_vala_file_name}.o: #{c_path}#{_vala_file_name}.c
+		"#{debug_path}#{_vala_file_name}.o: #{c_path}#{_rel_path}/#{_vala_file_name}.c
 	gcc -o $@ -g -c $< -Wall #{_deps_params}\n\n"
 		)
 		object_files_debug.push("#{debug_path}#{_vala_file_name}.o")
@@ -257,15 +278,6 @@ end
 
 #do compile vala
 
-_pkg = dev_deps.reduce {|a, b| a + " --pkg " + b}
-_mod_vala_files = []
-vala_files.each {|_x|
-	_p = _x
-	if _x.end_with?("ui.vala") 
-		_p = mod_src_path + get_raw_filename(_x)
-	end
-	_mod_vala_files.push(_p)
-}
 _valas = _mod_vala_files.reduce {|a,b| a + " " + b}
 make_file.write(
 	"compile_vala:
@@ -273,7 +285,7 @@ make_file.write(
 	valac --pkg #{_pkg} #{_valas}  --target-glib=2.38 --gresources #{res_xml} -C -d #{c_path}\n\n"
 	)
 
-#do compile red
+#do compile res
 
 _uis = ui_files.reduce {|a,b| a + " " + b}
 _res_file_name = res_xml[res_xml.rindex("/")+1..res_xml.length - 1]
@@ -282,6 +294,8 @@ make_file.write(
 	[ -d \"#{c_path}\"] || mkdir -p \"#{c_path}\"
 	glib-compile-resources #{res_xml} --target=#{c_path}#{_res_file_name}.c --sourcedir=$(srcdir) --c-name _ap --generate-source\n\n"
 	)
+
+
 
 #do cleanup
 

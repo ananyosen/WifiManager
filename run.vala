@@ -160,7 +160,7 @@ int main(string[] args) {
         #dev_list{border-radius: 3px;}
         #main_window{}";
     try {
-        css_provider.load_from_data(css);
+        css_provider.load_from_data(css, css.length);
     }
     catch(GLib.Error err) {
         Helper.log("ERROR LOADING CSS AT config.vala");
