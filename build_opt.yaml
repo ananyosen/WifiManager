@@ -28,7 +28,7 @@ vala_files:
 # vala ui files, composite templates, in deps order(optionally)
 # generator will try to find the corresponding vala file and compile it
 # if not found a warning will be shown
-# example. if an ui file is added as hello.ui, it will try to find and add helloui.vala to vala_files
+# example. if an ui file is added as hello.ui, it will try to find and add hello.ui.vala to vala_files
 # custom vala can be specified as 
 # - custom.ui
 #     path: "/this/can/be/relative/or/absolute/any.ui"
