@@ -150,7 +150,6 @@ class MainUi : Gtk.Box {
     }
 
     public void addAccessPoints(GenericArray<NM.AccessPoint> _aps, WifiUtility.WifiDevice _device) {
-        stdout.printf("\n\nhere\n\n");        
         GenericArray<NM.AccessPoint> _own_aps = _aps;
         if(_device.added && _device.index < scroll_aps.length - 1) {
             Box _box_ap = box_aps[_device.index + 1];

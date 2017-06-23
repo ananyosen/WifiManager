@@ -16,6 +16,10 @@ namespace WifiUtility {
         private NM.Client client = null;
         private GenericArray<WifiDevice> wifi_devices = null;
         private GenericArray<RemoteConnection> remote_connections = null;
+
+        private ulong device_added_handler = 0;
+        private ulong device_removed_handler = 0;
+        
         public bool wifiEnabled {
             get {return this.client.wireless_get_enabled();}
             set {this.client.wireless_set_enabled(value);}
@@ -28,18 +32,18 @@ namespace WifiUtility {
         
         public Manager() {
             this.client = new NM.Client();
-            this.client.device_added.connect((_client, _device) => {
+            this.device_added_handler = this.client.device_added.connect((_client, _device) => {
                 if(_device.get_device_type() == NM.DeviceType.WIFI) {
                     devicesChanged();
                 }
             });
-            this.client.device_removed.connect((_client, _device) => {
+            this.device_removed_handler = this.client.device_removed.connect((_client, _device) => {
                 if(_device.get_device_type() == NM.DeviceType.WIFI) {
                     devicesChanged();
                 }
             });
-            this.wifi_devices = new GenericArray<WifiDevice>();
             this.remote_connections = new GenericArray<RemoteConnection>();
+            this.devices_changed_handler = 0;
         }
 
         public signal void networksRead();
@@ -48,6 +52,7 @@ namespace WifiUtility {
 
         public bool initDevices() {
             bool _foundWifi = false;
+            this.wifi_devices = new GenericArray<WifiDevice>();
             GenericArray<NM.Device> devices = this.client.get_devices();
             for (int iii = 0; iii < devices.length; iii++) {
                 if(devices[iii].get_device_type() == NM.DeviceType.WIFI) {
@@ -60,7 +65,7 @@ namespace WifiUtility {
             return _foundWifi;
         }
 
-        public void readSavedNetworksCB(NM.RemoteSettings _remote_settings) {
+        public void readSavedNetworks(NM.RemoteSettings _remote_settings) {
             this.remote_connections = new GenericArray<NM.RemoteConnection>();
             SList<weak NM.RemoteConnection> _remote_connections = _remote_settings.list_connections();
             for(int iii = 0; iii < _remote_connections.length(); iii++) {

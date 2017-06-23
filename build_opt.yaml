@@ -23,7 +23,7 @@ vala_files:
   - apapplet.ui.vala: ./src
   - device.ui.vala: ./src
   - main.ui.vala: ./src
-  - run.vala: ./src
+  - exec.vala: ./src
 
 # vala ui files, composite templates, in deps order(optionally)
 # generator will try to find the corresponding vala file and compile it

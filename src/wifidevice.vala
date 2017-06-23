@@ -19,18 +19,24 @@ namespace WifiUtility {
         private string MAC;
         private bool scanning = false;
         private GenericArray<NM.AccessPoint> access_points = null;
+        public ulong state_changed_handler = 0;
+
         public int index = -1;
         public bool added = false;
+
         public WifiDevice(NM.DeviceWifi _device) {
             this.device = _device;
             this.product = this.device.get_product();
             this.MAC = this.device.get_hw_address();
             this.vendor = this.device.get_vendor();
+            this.state_changed_handler = this.device.state_changed.connect((_nm_dev, _new_state, _old_state, _reason) => {
+                this.stateChanged(_new_state, _old_state, _reason);
+            });
         }
 
         public signal void scanDone();
-
         public signal void scanStarted();
+        public signal void stateChanged(uint a, uint b, uint c);
 
         private void onWifiScan(DeviceWifi _device, GLib.Error err) {
             this.scanning = false;

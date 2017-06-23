@@ -27,16 +27,16 @@
      private Label text_channel;
      [GtkChild]
      private Button button_delete;
-     [GtkChild]
-     private Label label_ip_type;
-     [GtkChild]
-     private Label label_applet_ip;
-     [GtkChild]
-     private Label label_applet_subnet;
-     [GtkChild]
-     private Label label_applet_gateway;
-     [GtkChild]
-     private Box box_ip_container;
+    //   [GtkChild]
+    //   private Label label_ip_type;
+    //   [GtkChild]
+    //   private Label label_applet_ip;
+    //   [GtkChild]
+    //   private Label label_applet_subnet;
+    //   [GtkChild]
+    //   private Label label_applet_gateway;
+     //[GtkChild]
+     //private// Box box_ip_container;
 
     //   private int deviceID = -1;
     //   private int apID = -1; 
@@ -105,6 +105,45 @@
 
      }
 
+     private void connectToAp() {
+        //  NM.Client _client = new NM.Client();
+        if(this.matched) {
+            ((NM.RemoteConnection)this.remote_connection).commit_changes((_cnn, err) => {
+                NM.Client _client = new NM.Client();
+                 _client.activate_connection(
+                    _cnn, 
+                    this.device.getRawDevice(),
+                    this.access_point.get_path(),
+                        (one, two, three) => {
+
+                        }
+                );
+            });
+            //  _client.activate_connection(
+            //      this.remote_connection, 
+            //      this.device.getRawDevice(),
+            //      this.access_point.get_path(),
+            //      (one, two, three) => {
+
+            //      }
+            //);
+        }
+        else {
+            NM.Client _client = new NM.Client();
+            NM.Connection _cnn = new NM.Connection();
+            //  _cnn.add_setting(_sett);
+            _client.add_and_activate_connection(
+                _cnn,
+                this.device.getRawDevice(),
+                this.access_point.get_path(),
+                (client, device, path, error) => {
+                    
+                }
+            );
+        }
+        this.connectClicked();
+     }
+
      public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, bool _matched, NM.Connection _connection = new NM.Connection()) {
         this.name = "ap_applet";
         this.set_margin_bottom(3);
@@ -128,8 +167,8 @@
         this.freq = _ap.frequency.to_string();
         this.strength = (int)_ap.strength;
         this.channel = (NM.Utils.wifi_freq_to_channel(_ap.frequency)).to_string();
-        this.box_ip_container.name = "applet_ip_container";
-        this.box_ip_container.set_margin_top(5);
+        //this.box_ip_container.name = "applet_ip_container";
+        //this.box_ip_container.set_margin_top(5);
         if(!this.is_dhcp4) {
             if(this.setting_ip4_config.get_num_addresses() > 0) {
 
@@ -158,54 +197,53 @@
                 GenericArray<Array<string>> _data_all =  Helper.parseSettingString(this.setting_ip4_config.to_string());
                 Array<string> _data = _data_all[0];
                 uint32 _netmask_prefix = int.parse(_data.data[1]);
-                stdout.printf("\n netmask: %d\n", (int)_netmask_prefix);
                 uint32 _netmask = NM.Utils.ip4_prefix_to_netmask(_netmask_prefix);
-                this.label_ip_type.label = "Static";
-                this.label_applet_ip.label = _data.data[0];
-                this.label_applet_gateway.label = _data.data[2];
-                this.label_applet_subnet.label = Helper.networkIntToIp4Dotted(_netmask);
+                //  this.label_ip_type.label = "Static";
+                //  this.label_applet_ip.label = _data.data[0];
+                //  this.label_applet_gateway.label = _data.data[2];
+                //  this.label_applet_subnet.label = Helper.networkIntToIp4Dotted(_netmask);
             }
         }
         else {
-            this.label_ip_type.label = "DHCP";
-            this.label_applet_ip.label = "";
-            this.label_applet_gateway.label = "";
-            this.label_applet_subnet.label = "";
+            //  this.label_ip_type.label = "DHCP";
+            //  this.label_applet_ip.label = "";
+            //  this.label_applet_gateway.label = "";
+            //  this.label_applet_subnet.label = "";
         }
-        button_connect.clicked.connect(() => {
-            NM.Client _client = new NM.Client();
-            if(this.matched) {
-                _client.activate_connection(
-                    this.remote_connection, 
-                    this.device.getRawDevice(),
-                    this.access_point.get_path(),
-                    (one, two, three) => {
+        button_connect.clicked.connect(connectToAp);
+            //  NM.Client _client = new NM.Client();
+            //  if(this.matched) {
+            //      _client.activate_connection(
+            //          this.remote_connection, 
+            //          this.device.getRawDevice(),
+            //          this.access_point.get_path(),
+            //          (one, two, three) => {
 
-                    }
-                );
-            }
-            else {
-                //  NM.SettingIP4Config _sett = new NM.SettingIP4Config();
-                //  if(this.modified) {
-                //      _sett.add_address(this.default_ip4);
-                //  }
-                //  stdout.printf("\n\nsett\n\n" + _sett.to_string());
-                //  NM.Connection _cnn = new NM.Connection.from_hash(
-                //      (HashTable<string,GLib.HashTable<weak void*,weak void*>>)_sett.to_hash(NM.SettingHashFlags.ALL)
-                //      );
-                NM.Connection _cnn = new NM.Connection();
-                //  _cnn.add_setting(_sett);
-                _client.add_and_activate_connection(
-                    _cnn,
-                    this.device.getRawDevice(),
-                    this.access_point.get_path(),
-                    (client, device, path, error) => {
+            //          }
+            //      );
+            //  }
+            //  else {
+            //      //  NM.SettingIP4Config _sett = new NM.SettingIP4Config();
+            //      //  if(this.modified) {
+            //      //      _sett.add_address(this.default_ip4);
+            //      //  }
+            //      //  stdout.printf("\n\nsett\n\n" + _sett.to_string());
+            //      //  NM.Connection _cnn = new NM.Connection.from_hash(
+            //      //      (HashTable<string,GLib.HashTable<weak void*,weak void*>>)_sett.to_hash(NM.SettingHashFlags.ALL)
+            //      //      );
+            //      NM.Connection _cnn = new NM.Connection();
+            //      //  _cnn.add_setting(_sett);
+            //      _client.add_and_activate_connection(
+            //          _cnn,
+            //          this.device.getRawDevice(),
+            //          this.access_point.get_path(),
+            //          (client, device, path, error) => {
                         
-                    }
-                );
-            }
-             connectClicked();
-         });
+            //          }
+            //      );
+            //  }
+            //   this.connectClicked();
+         //});
         button_delete.clicked.connect(()=>{
             NM.RemoteConnection _remote = (NM.RemoteConnection) this.remote_connection;
             _remote.@delete(this.remoteCOnnectionRemovedCB);
@@ -228,6 +266,12 @@
                 this.config_window.close();
                 //do something
                 this.config_window = null;
+            });
+            this.config_ip.closeAndConnect.connect(() => {
+                this.config_window.close();
+                //do something
+                this.config_window = null;
+                connectToAp();
             });
             this.config_window.add(this.config_ip);
             this.config_window.key_release_event.connect((evt) => {
