@@ -39,6 +39,7 @@ class Activity : Gtk.Window {
         }
         this.devices.foreach((_wd) => {
             _wd.stateChanged.connect((_wifidevice, _old_state, _new_state, _reason) => {
+                this.refreshActiveConnections();
                 Helper.i(
                     "device state changed for: " + _wifidevice.getProduct() 
                     + "\n old state: " + _old_state.to_string() 
@@ -48,15 +49,15 @@ class Activity : Gtk.Window {
             });
             this.main_ui.addDeviceUi(_wd);
         });
+        this.scanForNetworksCallback();
         this.scanForNetworks();
     }
 
-    private void scanForNetworks() {
-        if(this.devices == null) {
+    private void scanForNetworksCallback() {
+         if(this.devices == null) {
             return;
         }
         this.devices.foreach((_wd) => {
-            _wd.scan();
             _wd.scanDone.connect((_wdev) => {
                 GenericArray<NM.AccessPoint> _aps = new GenericArray<NM.AccessPoint>();
                 _wdev.getScannedAPs(ref _aps);
@@ -65,11 +66,54 @@ class Activity : Gtk.Window {
         });
     }
 
+    private void scanForNetworks() {
+        if(this.devices == null) {
+            return;
+        }
+        this.devices.foreach((_wd) => {
+            _wd.scan();
+        });
+    }
+
+    private void refreshActiveConnections() {
+        if(this.manager != null) {
+            this.manager.reloadActiveConnections();
+            if(this.main_ui != null) {
+                this.main_ui.updateActiveConnections(this.manager.getActiveConnections());
+            }
+        }
+        this.scanForNetworks();
+    }
+
     private void reloadConnections() {
+        this.refreshActiveConnections();
         if(this.manager != null && this.remote_settings != null) {
             this.manager.readSavedNetworks(this.remote_settings);
         }
         this.main_ui.updateSavedSettings(manager.getRemoteConnections());
+    }
+
+    private void stylise() {
+        string css_string = 
+            "#bad_ip{background-color:#e79e9e}
+            #good_ip{background-color:#8ff291}
+            #remove_dns{color:#ff3333}
+            #ap_list{background-color:#ffffff;border:1px solid #ccc;border-radius:3px}
+            #ap_applet{border-bottom:1px solid #ccc}
+            #applet_ip_container{border-top:1px dashed #ccc}
+            #dev_list{border-radius:3px}";
+        Gtk.CssProvider css_provider = new Gtk.CssProvider();
+        try {
+            css_provider.load_from_data(css_string, css_string.length);
+        }
+        catch(GLib.Error e) {
+            Helper.e("parse error in css");
+        }
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), 
+            css_provider,     
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
     }
 
     public Activity() {
@@ -106,26 +150,7 @@ class Activity : Gtk.Window {
         });
         this.main_ui.startScan.connect(this.scanForNetworks);
 
-        string css_string = 
-            "#bad_ip{background-color:#e79e9e}
-            #good_ip{background-color:#8ff291}
-            #remove_dns{color:#ff3333}
-            #ap_list{background-color:#ffffff;border:1px solid #ccc;border-radius:3px}
-            #ap_applet{border-bottom:1px solid #ccc}
-            #applet_ip_container{border-top:1px dashed #ccc}
-            #dev_list{border-radius:3px}";
-        Gtk.CssProvider css_provider = new Gtk.CssProvider();
-        try {
-            css_provider.load_from_data(css_string, css_string.length);
-        }
-        catch(GLib.Error e) {
-            Helper.e("parse error in css");
-        }
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), 
-            css_provider,     
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
+        this.stylise();
     }
 
     public static int main(string[] args) {

@@ -40,9 +40,9 @@ namespace WifiUtility {
 
         private void onWifiScan(DeviceWifi _device, GLib.Error err) {
             this.scanning = false;
-            access_points = this.device.get_access_points();
+            this.access_points = this.device.get_access_points();
             //TODO: log error
-            scanDone();
+            this.scanDone();
         }
 
         public void scan() {

@@ -52,6 +52,8 @@
 
     private bool matched;
     private bool is_dhcp4 = true;
+    private bool is_active = false;
+    
     public string ssid {
          set {ap_name.label = value;}
         //   get {return this.ssid;}
@@ -91,9 +93,9 @@
             }         
      }
 
-     public bool saved {
-         set {text_saved.label = (value)?"saved":"not saved";}         
-     }
+    //   public bool saved {
+    //       set {text_saved.label = (value)?"saved":"not saved";}         
+    //   }
 
      public string channel {
          set {text_channel.label ="CH: " + value;}         
@@ -144,7 +146,7 @@
         this.connectClicked();
      }
 
-     public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, bool _matched, NM.Connection _connection = new NM.Connection()) {
+     public ApApplet(WifiUtility.WifiDevice _device, NM.AccessPoint _ap, bool _active, bool _matched, NM.Connection _connection = new NM.Connection()) {
         this.name = "ap_applet";
         this.set_margin_bottom(3);
         this.set_margin_top(2);
@@ -160,8 +162,9 @@
             string _ip4_method = this.setting_ip4_config.method;
             this.is_dhcp4 = (_ip4_method == "auto");
         }
-       this.button_delete.set_sensitive(this.matched);
-       this.button_mod_connect.set_sensitive(this.matched);
+        this.is_active = _active;
+        this.button_delete.set_sensitive(this.matched);
+        this.button_mod_connect.set_sensitive(this.matched);
         this.mac = _ap.bssid;
         this.ssid = NM.Utils.ssid_to_utf8(_ap.get_ssid());
         this.freq = _ap.frequency.to_string();
@@ -169,6 +172,10 @@
         this.channel = (NM.Utils.wifi_freq_to_channel(_ap.frequency)).to_string();
         //this.box_ip_container.name = "applet_ip_container";
         //this.box_ip_container.set_margin_top(5);
+        if(this.is_active) {
+            this.button_connect.label = "Disconnect";
+            this.text_saved.label = "Connected";
+        }
         if(!this.is_dhcp4) {
             if(this.setting_ip4_config.get_num_addresses() > 0) {
 
@@ -210,7 +217,18 @@
             //  this.label_applet_gateway.label = "";
             //  this.label_applet_subnet.label = "";
         }
-        button_connect.clicked.connect(connectToAp);
+        button_connect.clicked.connect(() => {
+            if(this.is_active) {
+                this.device.disconnect(false);
+            }
+            else {
+                if(this.config_window != null) {
+                    this.config_window.close();
+                    this.config_window = null;
+                }
+                this.connectToAp();
+            }
+        });
             //  NM.Client _client = new NM.Client();
             //  if(this.matched) {
             //      _client.activate_connection(

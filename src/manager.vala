@@ -16,6 +16,7 @@ namespace WifiUtility {
         private NM.Client client = null;
         private GenericArray<WifiDevice> wifi_devices = null;
         private GenericArray<RemoteConnection> remote_connections = null;
+        private GenericArray<NM.ActiveConnection> active_connection_paths = null;
 
         private ulong device_added_handler = 0;
         private ulong device_removed_handler = 0;
@@ -42,7 +43,8 @@ namespace WifiUtility {
                     devicesChanged();
                 }
             });
-            this.remote_connections = new GenericArray<RemoteConnection>();
+            //this.remote_connections = new GenericArray<RemoteConnection>();
+            //this.active_connection_paths = new GenericArray<string>();
             this.devices_changed_handler = 0;
         }
 
@@ -85,6 +87,22 @@ namespace WifiUtility {
 
         public void destroy() {
             //TODO
+        }
+
+        public void reloadActiveConnections() {
+            this.active_connection_paths = new GenericArray<NM.ActiveConnection>();
+            if(this.client != null ) {
+                GenericArray<NM.ActiveConnection> _active_connections = this.client.get_active_connections();
+                _active_connections.foreach((_active_connection) => {
+                    if(_active_connection.get_connection_type() == "802-11-wireless") {
+                        this.active_connection_paths.add(_active_connection);
+                    }
+                });
+            }
+        }
+
+        public GenericArray<NM.ActiveConnection> getActiveConnections() {
+            return this.active_connection_paths;
         }
 
         //  public void readSavedNetworks(NM.RemoteSettings _remote_settings) {

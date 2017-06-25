@@ -53,14 +53,14 @@ class ConfigIP : Box {
         //  if(_editable == null || (_editable != null && this.ipChanged((Gtk.Entry)_editable)))
         //  {
             bool valid = true;
-            valid = valid && this.ipChanged(this.entry_ip);
-            valid = valid && this.ipChanged(this.entry_gateway);
-            valid = valid && this.ipChanged(this.entry_subnet);
-            valid = valid && this.ipChanged(this.entry_dns1);
-            valid = valid && this.ipChanged(this.entry_dns2);
+            valid =  this.ipChanged(this.entry_ip) && valid;
+            valid =  this.ipChanged(this.entry_gateway) && valid;
+            valid =  this.ipChanged(this.entry_subnet) && valid;
+            valid =  this.ipChanged(this.entry_dns1) && valid;
+            valid =  this.ipChanged(this.entry_dns2) && valid;
             if(this.dns_list != null) {
                 for(int lll = 0; lll < dns_list.length; lll++) {
-                    valid = valid && extraDnsChangedCB(dns_list[lll]);
+                    valid =  extraDnsChangedCB(dns_list[lll]) && valid;
                 }
             }
             return valid;

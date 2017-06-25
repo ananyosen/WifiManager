@@ -28,6 +28,7 @@ class MainUi : Gtk.Box {
     private GenericArray<DeviceUi> device_uis = null;
 
     private GenericArray<NM.RemoteConnection> remote_connections = null;
+    private GenericArray<NM.ActiveConnection> active_connection_paths = null;
     
 
     public bool wifi_on {
@@ -54,7 +55,7 @@ class MainUi : Gtk.Box {
         box_all.name = "ap_list";        
         vp_all.add(box_all);
         scroll_all.add(vp_all);
-        scroll_all.set_min_content_width(400);
+        scroll_all.set_min_content_width(450);
         scroll_all.set_min_content_height(250);
         this.scroll_aps.add(scroll_all);
         this.vp_aps.add(vp_all);
@@ -134,7 +135,7 @@ class MainUi : Gtk.Box {
         box_ap_.name = "ap_list";
         Viewport vp_dev = new Viewport(null, null);
         ScrolledWindow _scroll_dev = new ScrolledWindow(null, null);
-        _scroll_dev.set_min_content_width(400);
+        _scroll_dev.set_min_content_width(450);
         _scroll_dev.set_min_content_height(250);
         vp_dev.add(box_ap_);
         _scroll_dev.add(vp_dev);
@@ -173,6 +174,21 @@ class MainUi : Gtk.Box {
 
             //NEW METHOD: MATCH NM.AccessPoint TO NM.Connection
 
+            GenericArray<NM.ActiveConnection> _filtered_active_connections = new GenericArray<NM.ActiveConnection>();
+
+            if(this.active_connection_paths != null) {
+                this.active_connection_paths.foreach((_con) => {
+                    GenericArray<NM.Device> _dev_arr = _con.get_devices();
+                    for(int mmm = 0; mmm < _dev_arr.length; mmm++) {
+                        NM.Device _devw = _dev_arr[mmm];
+                        if(_devw.get_path() == _device.getRawDevice().get_path()) {
+                            _filtered_active_connections.add(_con);
+                            break;
+                        }
+                    }
+                });
+            }
+
             if(this.remote_connections == null) {
                 Helper.w("[mainui.vala] Object (remote_connections == null) true, proper init required");
                 return;
@@ -182,6 +198,15 @@ class MainUi : Gtk.Box {
 
             for(int iii = 0; iii < this.remote_connections.length; iii++) {
                 NM.Connection _ap_connection = (NM.Connection) this.remote_connections[iii];
+                bool _active = false;
+                if(this.active_connection_paths != null) {
+                    for(int nnn = 0; nnn < _filtered_active_connections.length; nnn++) {
+                        if(_ap_connection.get_path() == _filtered_active_connections[nnn].get_connection()) {
+                            _active = true;
+                            break;
+                        }
+                    }
+                }
                 for(int jjj = 0; jjj < _aps.length; jjj++) {
                     NM.AccessPoint _ap = _aps[jjj];
                     bool _matched = _ap.connection_valid(_ap_connection);
@@ -189,16 +214,24 @@ class MainUi : Gtk.Box {
                         _matched_indexs.remove_fast(jjj);
                         _matched_indexs.add(jjj);
                         Helper.i("[mainui.vala] ap: " + _ap.get_path() +  " matched with: " + _ap_connection.get_path()); 
+                        if(_active && (_device.getRawDevice().get_active_access_point().get_path() == _ap.get_path())) {
+                            ApApplet applet_all = new ApApplet(_device, _ap, _active, _matched, _ap_connection);
+                            ApApplet _applet = new ApApplet(_device, _ap, _active, _matched, _ap_connection); 
+                            _box_ap.pack_start(_applet, false, false);
+                            _box_all.pack_start(applet_all, false, false);
+                        }
+                        else {
                         //  NM.SettingIP4Config _ip4_config = _ap_connection.get_setting_ip4_config();
                         //  NM.IP4Address a1 = _ip4_config.get_address(0);
                         //  NM.IP4Address a2 = a1.dup();
                         //  ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection, a1);
                         //  ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection, a2);
                         // 
-                        ApApplet applet_all = new ApApplet(_device, _ap, _matched, _ap_connection);
-                        ApApplet _applet = new ApApplet(_device, _ap, _matched, _ap_connection); 
-                        _box_ap.add(_applet);
-                        _box_all.add(applet_all);
+                            ApApplet applet_all = new ApApplet(_device, _ap, false, _matched, _ap_connection);
+                            ApApplet _applet = new ApApplet(_device, _ap, false, _matched, _ap_connection); 
+                            _box_ap.add(_applet);
+                            _box_all.add(applet_all);
+                        }
                     }
                 }
             }
@@ -207,8 +240,8 @@ class MainUi : Gtk.Box {
                 if(!_matched_indexs.remove_fast(iii)) {
                     NM.AccessPoint _ap = _aps[iii];
                     Helper.i("[mainui.vala] unmatched ap: " + _ap.get_path());                        
-                    ApApplet _applet = new ApApplet(_device, _ap, false, new NM.Connection());
-                    ApApplet applet_all = new ApApplet(_device, _ap, false, new NM.Connection());
+                    ApApplet _applet = new ApApplet(_device, _ap, false, false, new NM.Connection());
+                    ApApplet applet_all = new ApApplet(_device, _ap, false, false, new NM.Connection());
                     _box_ap.add(_applet);
                     _box_all.add(applet_all);
                 }
@@ -263,6 +296,10 @@ class MainUi : Gtk.Box {
             //END OLD METHOD
 
         }
+    }
+
+    public void updateActiveConnections(GenericArray<NM.ActiveConnection> _connections) {
+        this.active_connection_paths = _connections;
     }
 
     public void updateSavedSettings(GenericArray<NM.RemoteConnection> _connections) {
