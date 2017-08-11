@@ -8,5 +8,6 @@ debug_run
 ./builds
 ./modified_src
 ./modified_src/*
+modified_src/
 Makefile
 res.xml
